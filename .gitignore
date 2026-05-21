@@ -33,3 +33,5 @@ tmp/
 # ── FitStake ──
 uploads/
 .playwright-mcp/
+.claude/
+*.tsbuildinfo

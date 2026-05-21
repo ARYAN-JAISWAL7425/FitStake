@@ -40,7 +40,7 @@ router.get('/', requireAuth, async (req, res, next) => {
     const fpToNextTier = next ? Math.max(0, TIER_FLOOR[next] - user.fp) : 0;
 
     // Lifetime stats — drives the Profile page's three-stat row.
-    const [earnedBackAgg, donatedAgg, cyclesDone] = await Promise.all([
+    const [earnedBackAgg, donatedAgg, cyclesWon, cyclesMissed] = await Promise.all([
       Transaction.aggregate<{ total: number }>([
         { $match: { userId: user._id, kind: 'stake_return' } },
         { $group: { _id: null, total: { $sum: '$amount' } } },
@@ -49,11 +49,14 @@ router.get('/', requireAuth, async (req, res, next) => {
         { $match: { userId: user._id, kind: 'stake_donate' } },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
-      Cycle.countDocuments({ userId: user._id, status: { $in: ['completed', 'missed'] } }),
+      Cycle.countDocuments({ userId: user._id, status: 'completed' }),
+      Cycle.countDocuments({ userId: user._id, status: 'missed' }),
     ]);
     const lifetime = {
       earnedBack: earnedBackAgg[0]?.total ?? 0,
-      cyclesDone,
+      cyclesWon,
+      cyclesMissed,
+      cyclesDone: cyclesWon + cyclesMissed,
       donatedToCharity: donatedAgg[0]?.total ?? 0,
     };
 

@@ -18,6 +18,8 @@ export type AuthUser = {
   lifetime?: {
     earnedBack: number;
     cyclesDone: number;
+    cyclesWon: number;
+    cyclesMissed: number;
     donatedToCharity: number;
   };
 };

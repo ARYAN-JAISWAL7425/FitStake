@@ -99,7 +99,10 @@ export function Profile() {
           <div className="flex-1 min-w-0">
             <div className="font-h font-bold text-[18px]">{user.name}</div>
             <div className="text-[12px] text-white/70 mt-0.5">
-              {user.tier} tier · {user.lifetime?.cyclesDone ?? 0} cycle{user.lifetime?.cyclesDone === 1 ? '' : 's'} completed
+              {user.tier} tier
+              {(user.lifetime?.cyclesDone ?? 0) > 0
+                ? ` · ${user.lifetime?.cyclesWon ?? 0} won · ${user.lifetime?.cyclesMissed ?? 0} missed`
+                : ' · no cycles yet'}
             </div>
           </div>
         </div>

@@ -17,6 +17,9 @@ import { PlanReview } from './screens/PlanReview';
 import { CycleComplete } from './screens/CycleComplete';
 import { Missed } from './screens/Missed';
 import { Group } from './screens/Group';
+import { PrivacyData } from './screens/PrivacyData';
+import { CharityPreferences } from './screens/CharityPreferences';
+import { Support } from './screens/Support';
 import { routes } from './lib/routes';
 
 export default function App() {
@@ -40,6 +43,9 @@ export default function App() {
           <Route path={routes.cycleComplete} element={<CycleComplete />} />
           <Route path={routes.missed} element={<Missed />} />
           <Route path={routes.group} element={<Group />} />
+          <Route path={routes.privacy} element={<PrivacyData />} />
+          <Route path={routes.charity} element={<CharityPreferences />} />
+          <Route path={routes.support} element={<Support />} />
         </Routes>
         <DemoNav />
       </PhoneFrame>

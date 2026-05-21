@@ -82,7 +82,13 @@ export function currentDayOf(c: CycleDoc, now: Date = new Date()): number {
   return Math.max(1, Math.min(c.daysTotal, elapsed + 1));
 }
 
-export function toCycleDTO(c: CycleDoc, completedGoalIds: string[] = []) {
+export type ProofInfo = { proofKind: 'auto-steps' | 'photo' | 'tap'; verifiedSteps?: number | null };
+
+export function toCycleDTO(
+  c: CycleDoc,
+  completedGoalIds: string[] = [],
+  proofByGoalId: Record<string, ProofInfo> = {}
+) {
   const now = new Date();
   const day = currentDayOf(c, now);
   const daysLeft = Math.max(0, c.daysTotal - day);
@@ -102,15 +108,21 @@ export function toCycleDTO(c: CycleDoc, completedGoalIds: string[] = []) {
     endDate: `${monthShort[c.endsAt.getMonth()]} ${c.endsAt.getDate()}`,
     status: c.status,
     completedToday: completedGoalIds,
-    goals: c.goals.map((g) => ({
-      id: (g._id as Types.ObjectId).toString(),
-      templateId: g.templateId,
-      title: g.title,
-      target: g.target,
-      unit: g.unit,
-      difficulty: g.difficulty,
-      fpPerCompletion: g.fpPerCompletion,
-    })),
+    goals: c.goals.map((g) => {
+      const id = (g._id as Types.ObjectId).toString();
+      const proof = proofByGoalId[id];
+      return {
+        id,
+        templateId: g.templateId,
+        title: g.title,
+        target: g.target,
+        unit: g.unit,
+        difficulty: g.difficulty,
+        fpPerCompletion: g.fpPerCompletion,
+        proofKind: proof?.proofKind ?? null,
+        verifiedSteps: proof?.verifiedSteps ?? null,
+      };
+    }),
   };
 }
 

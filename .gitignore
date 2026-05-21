@@ -29,3 +29,7 @@ vendor/
 coverage/
 .cache/
 tmp/
+
+# ── FitStake ──
+uploads/
+.playwright-mcp/

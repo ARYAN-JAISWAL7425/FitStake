@@ -15,7 +15,6 @@ import { Completion } from '../models/Completion';
 import { User, toUserDTO } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { tierForFp } from '../lib/tier';
-import { applyFreezeAutoBurn } from '../lib/freeze';
 
 const router = Router();
 
@@ -109,17 +108,19 @@ router.post('/', requireAuth, async (req, res, next) => {
 router.get('/current', requireAuth, async (req, res, next) => {
   try {
     const userId = req.auth!.sub;
-    // Active cycle takes priority. Otherwise return the most recently resolved one
-    // so CycleComplete / Missed screens can read it.
-    let cycle = await Cycle.findOne({ userId, status: 'active' });
-    if (cycle) await applyFreezeAutoBurn(cycle);
-    if (!cycle) {
-      cycle = await Cycle.findOne({ userId, status: { $in: ['completed', 'missed'] } }).sort({ updatedAt: -1 });
-    }
+    // ONLY returns the active cycle. Resolved cycles are intentionally NOT
+    // returned here — they have their own endpoint (/cycles/recent) used by the
+    // outcome screens. This stops Home from seeing a resolved cycle on plain
+    // login and bouncing the user back to the Missed/CycleComplete page.
+    const cycle = await Cycle.findOne({ userId, status: 'active' });
     if (!cycle) return res.json({ cycle: null });
     const day = currentDayOf(cycle);
-    const completedToday = await Completion.find({ cycleId: cycle._id, day }).distinct('goalId');
-    return res.json({ cycle: toCycleDTO(cycle, completedToday) });
+    const todayCompletions = await Completion.find({ cycleId: cycle._id, day }).select('goalId proofKind verifiedSteps').lean();
+    const completedToday = todayCompletions.map((c) => c.goalId);
+    const proofByGoalId = Object.fromEntries(
+      todayCompletions.map((c) => [c.goalId, { proofKind: c.proofKind as 'auto-steps' | 'photo' | 'tap', verifiedSteps: c.verifiedSteps }])
+    );
+    return res.json({ cycle: toCycleDTO(cycle, completedToday, proofByGoalId) });
   } catch (err) {
     return next(err);
   }
@@ -130,7 +131,6 @@ router.get('/current/days', requireAuth, async (req, res, next) => {
   try {
     const userId = req.auth!.sub;
     let cycle = await Cycle.findOne({ userId, status: 'active' });
-    if (cycle) await applyFreezeAutoBurn(cycle);
     if (!cycle) {
       cycle = await Cycle.findOne({ userId, status: { $in: ['completed', 'missed'] } }).sort({ updatedAt: -1 });
     }
@@ -149,17 +149,56 @@ router.get('/current/days', requireAuth, async (req, res, next) => {
 
     const days: Array<{ day: number; status: 'done' | 'missed' | 'today' | 'upcoming' | 'freeze' }> = [];
     for (let d = 1; d <= cycle.daysTotal; d++) {
-      if (d > today) {
-        days.push({ day: d, status: 'upcoming' });
-      } else {
-        const allDone = goalCount > 0 && (byDay.get(d) ?? 0) >= goalCount;
-        if (allDone) days.push({ day: d, status: 'done' });
-        else if (frozen.has(d)) days.push({ day: d, status: 'freeze' });
-        else if (d === today) days.push({ day: d, status: 'today' });
-        else days.push({ day: d, status: 'missed' });
-      }
+      const allDone = goalCount > 0 && (byDay.get(d) ?? 0) >= goalCount;
+      // Priority order: completed > frozen > today > upcoming > missed.
+      // Frozen must be checked BEFORE the upcoming/today branches so a user-frozen
+      // future day actually renders as a freeze, not as upcoming.
+      if (allDone) days.push({ day: d, status: 'done' });
+      else if (frozen.has(d)) days.push({ day: d, status: 'freeze' });
+      else if (d > today) days.push({ day: d, status: 'upcoming' });
+      else if (d === today) days.push({ day: d, status: 'today' });
+      else days.push({ day: d, status: 'missed' });
     }
     return res.json({ days, totalGoals: goalCount, currentDay: today, freezesRemaining: Math.max(0, cycle.freezesStarting - cycle.freezesUsed) });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/** Manual freeze — user explicitly burns one freeze on a specific day. */
+const freezeSchema = z.object({ day: z.number().int().min(1).max(60) });
+
+router.post('/current/freeze', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.auth!.sub;
+    const { day } = freezeSchema.parse(req.body);
+
+    const cycle = await Cycle.findOne({ userId, status: 'active' });
+    if (!cycle) throw new HttpError(400, 'No active cycle');
+    if (day < 1 || day > cycle.daysTotal) throw new HttpError(400, `Day must be 1–${cycle.daysTotal}`);
+
+    if (cycle.frozenDays.includes(day)) {
+      return res.json({ already: true });
+    }
+
+    // Can't freeze a day that's already been fully credited via completions.
+    const goalCount = cycle.goals.length;
+    const completionsForDay = await Completion.countDocuments({ cycleId: cycle._id, day });
+    if (goalCount > 0 && completionsForDay >= goalCount) {
+      throw new HttpError(400, 'That day is already fully completed — no freeze needed.');
+    }
+
+    const freezesLeft = cycle.freezesStarting - cycle.freezesUsed;
+    if (freezesLeft <= 0) {
+      throw new HttpError(400, 'No freezes left for this cycle.');
+    }
+
+    cycle.frozenDays.push(day);
+    cycle.freezesUsed += 1;
+    cycle.credited += 1;
+    await cycle.save();
+
+    return res.json({ already: false, freezesRemaining: cycle.freezesStarting - cycle.freezesUsed, credited: cycle.credited });
   } catch (err) {
     return next(err);
   }

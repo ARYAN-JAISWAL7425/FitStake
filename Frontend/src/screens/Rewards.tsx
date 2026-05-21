@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   History, Sparkles, TrendingUp, Medal, ChevronRight, Ticket, ShoppingBag, CircleCheck, Info, Lock, X, Copy,
-  ShoppingBag as ShoppingBagIcon, Activity, Headphones, Salad, Utensils, GlassWater, CircleDashed, Dumbbell, Watch,
+  ShoppingBag as ShoppingBagIcon, Activity, Headphones, Salad, Utensils, GlassWater, CircleDashed, Dumbbell, Watch, Bike,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StatusBar } from '../components/StatusBar';
@@ -23,6 +23,7 @@ const brandIcon: Record<string, typeof ShoppingBagIcon> = {
   'circle-dashed': CircleDashed,
   dumbbell: Dumbbell,
   watch: Watch,
+  bike: Bike,
 };
 
 const couponCategories = ['All', 'Fitness', 'Food', 'Wellness', 'Tech'] as const;

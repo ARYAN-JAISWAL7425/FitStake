@@ -42,6 +42,7 @@ export const storeItems: StoreItem[] = [
   { id: 'cultfit-pro', title: 'Cult.fit Pro · 1 month', subtitle: 'Unlimited classes · digital delivery', icon: 'activity', cost: 3500, category: 'Subscription', cyclesToUnlock: 1 },
   { id: 'gym-pass', title: 'Gym day pass', subtitle: 'Any partner gym in your city', icon: 'dumbbell', cost: 2800, category: 'Experience', cyclesToUnlock: 1 },
   { id: 'smartwatch', title: 'Fitness tracker', subtitle: 'Heart rate · sleep · steps', icon: 'watch', cost: 12000, category: 'Gear', cyclesToUnlock: 6, locked: true, unlockTier: 'Gold' },
+  { id: 'bicycle', title: 'City bicycle', subtitle: 'Single-speed commuter cycle · home delivered', icon: 'bike', cost: 30000, category: 'Gear', cyclesToUnlock: 6, locked: true, unlockTier: 'Gold' },
 ];
 
 export const tierBenefits: Record<Tier, string[]> = {

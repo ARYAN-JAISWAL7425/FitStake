@@ -15,6 +15,9 @@ export const routes = {
   cycleComplete: '/cycle-complete',
   missed: '/missed',
   group: '/group',
+  privacy: '/privacy',
+  charity: '/charity',
+  support: '/support',
 } as const;
 
 export type RouteKey = keyof typeof routes;

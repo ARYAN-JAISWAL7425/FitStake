@@ -8,8 +8,8 @@ afterAll(stopTestDb);
 beforeEach(clearAllCollections);
 
 const goals = [
-  // Use templateIds that go down the honor-system / photo paths so we don't need
-  // Google Fit. Sleep = honor-tap (no proof required). Water = photo-required.
+  // Both go down the photo-required path. All non-step goals require a photo;
+  // 'steps' goes through Google Fit (which we don't want to mock here).
   { templateId: 'sleep', title: 'Sleep 7h', target: 7, unit: 'hours' },
   { templateId: 'water', title: 'Drink 2L', target: 2, unit: 'L' },
 ];
@@ -21,23 +21,16 @@ async function startCycle(token: string) {
 }
 
 describe('POST /completions (tap-to-complete)', () => {
-  it('credits FP for an honor-system goal and is idempotent', async () => {
+  it('rejects a photo-required sleep goal via the plain /completions path', async () => {
     const { token } = await registerUser();
     const cycle = await startCycle(token);
     const sleepGoal = cycle.goals.find((g) => g.templateId === 'sleep')!;
-
-    const first = await authed(token).post('/completions').send({ goalId: sleepGoal.id });
-    expect(first.status).toBe(201);
-    expect(first.body.already).toBe(false);
-    expect(first.body.awarded.goalFp).toBeGreaterThan(0);
-
-    const second = await authed(token).post('/completions').send({ goalId: sleepGoal.id });
-    expect(second.status).toBe(200);
-    expect(second.body.already).toBe(true);
-    expect(second.body.awarded.total).toBe(0);
+    const res = await authed(token).post('/completions').send({ goalId: sleepGoal.id });
+    expect(res.status).toBe(409);
+    expect(res.body.reason).toBe('photo_required');
   });
 
-  it('rejects a photo-required goal via the plain /completions path', async () => {
+  it('rejects a photo-required water goal via the plain /completions path', async () => {
     const { token } = await registerUser();
     const cycle = await startCycle(token);
     const waterGoal = cycle.goals.find((g) => g.templateId === 'water')!;
@@ -94,6 +87,28 @@ describe('POST /completions/photo (photo proof + dedupe)', () => {
       .attach('photo', buf, { filename: 'b.jpg', contentType: 'image/jpeg' });
     expect(b.status).toBe(409);
     expect(b.body.reason).toBe('duplicate_photo');
+  });
+
+  it('is idempotent on the photo path — second upload returns already=true with no extra FP', async () => {
+    const { token } = await registerUser();
+    const cycle = await startCycle(token);
+    const waterGoal = cycle.goals.find((g) => g.templateId === 'water')!;
+    const first = await request(app)
+      .post('/completions/photo')
+      .set('Authorization', `Bearer ${token}`)
+      .field('goalId', waterGoal.id)
+      .attach('photo', Buffer.from('photo-bytes-first'), { filename: 'a.jpg', contentType: 'image/jpeg' });
+    expect(first.status).toBe(201);
+    expect(first.body.awarded.goalFp).toBeGreaterThan(0);
+
+    const second = await request(app)
+      .post('/completions/photo')
+      .set('Authorization', `Bearer ${token}`)
+      .field('goalId', waterGoal.id)
+      .attach('photo', Buffer.from('photo-bytes-second'), { filename: 'b.jpg', contentType: 'image/jpeg' });
+    expect(second.status).toBe(200);
+    expect(second.body.already).toBe(true);
+    expect(second.body.awarded.total).toBe(0);
   });
 
   it('rejects non-image uploads', async () => {

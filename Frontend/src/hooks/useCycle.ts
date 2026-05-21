@@ -11,6 +11,8 @@ import { useAppEvent } from '../lib/events';
 
 const EMPTY_CYCLE = {
   active: false as const,
+  status: 'active' as const,
+  id: '',
   number: 0,
   day: 0,
   daysTotal: 30,
@@ -34,6 +36,8 @@ type ServerGoal = {
   unit: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   fpPerCompletion: number;
+  proofKind?: 'auto-steps' | 'photo' | 'tap' | null;
+  verifiedSteps?: number | null;
 };
 
 export type ServerCycle = {
@@ -66,11 +70,25 @@ const iconKeyByTemplate: Record<ServerGoal['templateId'], string> = {
 
 function adaptGoal(g: ServerGoal, doneIds: string[]) {
   const done = doneIds.includes(g.id);
+  let progress: string;
+  if (done) {
+    // Surface HOW it was verified so the user can tell the system actually checked.
+    if (g.proofKind === 'auto-steps' && g.verifiedSteps != null) {
+      progress = `Verified by Google Fit · ${g.verifiedSteps.toLocaleString('en-IN')} steps · +${g.fpPerCompletion} FP`;
+    } else if (g.proofKind === 'photo') {
+      progress = `Verified by photo proof · +${g.fpPerCompletion} FP`;
+    } else {
+      progress = `Completed · +${g.fpPerCompletion} FP`;
+    }
+  } else {
+    progress = `Target: ${g.target} ${g.unit}`;
+  }
   return {
     id: g.id,
     title: g.title,
     icon: iconKeyByTemplate[g.templateId],
-    progress: done ? `Completed · +${g.fpPerCompletion} FP` : `Target: ${g.target} ${g.unit}`,
+    templateId: g.templateId,
+    progress,
     done,
   };
 }
@@ -100,8 +118,14 @@ export function useCycle() {
   useAppEvent('cycle-changed', fetchCycle);
 
   if (cycle) {
+    // `active` reflects whether there's a cycle the user is currently DOING.
+    // Resolved cycles (completed/missed) hang around in /cycles/current so the
+    // outcome screens can read them, but Home should treat them as "no cycle".
+    const isActive = cycle.status === 'active';
     return {
-      active: true as const,
+      active: isActive,
+      status: cycle.status,
+      id: cycle.id,
       number: cycle.number,
       day: cycle.day,
       daysTotal: cycle.daysTotal,
@@ -132,6 +156,8 @@ export function useCycle() {
   const creditedNeeded = Math.max(mockCycle.threshold - mockCycle.credited, 0);
   return {
     active: true as const,
+    status: 'active' as const,
+    id: 'mock-cycle',
     ...mockCycle,
     daysLeft: cycleDaysLeft,
     creditedNeeded,

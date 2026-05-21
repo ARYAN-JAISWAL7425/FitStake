@@ -52,6 +52,8 @@ export const env = {
   smtpUser: readEither('SMTP_USER'),
   smtpPass: readEither('SMTP_PASS'),
   smtpFrom: readEither('SMTP_FROM') ?? 'FitStake <no-reply@fitstake.app>',
+  /** Where the Support form ships user messages. Falls back to SMTP_USER. */
+  supportInbox: readEither('SUPPORT_INBOX'),
 };
 
 export function smtpConfigured() {

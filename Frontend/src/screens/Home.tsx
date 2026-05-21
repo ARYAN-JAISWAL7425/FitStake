@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Bell, Lock, Target, ChevronRight, CircleCheck, Sparkles, Snowflake, Shield, Footprints, Dumbbell, Droplet, FastForward, Trophy, X, Apple, Bike, Moon, PlusCircle, Wallet, Camera } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Bell, Lock, Target, ChevronRight, CircleCheck, Sparkles, Snowflake, Shield, Footprints, Dumbbell, Droplet, Apple, Bike, Moon, PlusCircle, Wallet, Camera } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { StatusBar } from '../components/StatusBar';
 import { TabBar } from '../components/TabBar';
@@ -9,9 +9,10 @@ import { useCycle } from '../hooks/useCycle';
 import { useCompletion } from '../hooks/useCompletion';
 import { routes } from '../lib/routes';
 import { getStake } from '../lib/stake';
-import { api, ApiError } from '../lib/api';
+import { api } from '../lib/api';
 import { getToken, setStoredUser } from '../lib/auth';
 import { emit } from '../lib/events';
+import type { GoalTemplate } from '../lib/photoVerify';
 
 const goalIconMap: Record<string, typeof Footprints> = {
   footprints: Footprints,
@@ -33,44 +34,60 @@ export function Home() {
   const [stepMsg, setStepMsg] = useState<string | null>(null);
   const [needsGoogleFit, setNeedsGoogleFit] = useState<string | null>(null);
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
-  const [photoForGoal, setPhotoForGoal] = useState<string | null>(null);
+  const [photoForGoal, setPhotoForGoal] = useState<{ id: string; templateId: string } | null>(null);
+  const [verifyingPhoto, setVerifyingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const hasCycle = cycle.active !== false;
-  const cycleProgress = hasCycle ? cycle.day / cycle.daysTotal : 0;
+  const hasActive = cycle.active === true;
+  const cycleProgress = hasActive ? cycle.day / cycle.daysTotal : 0;
 
-  const [simulating, setSimulating] = useState<'win' | 'miss' | null>(null);
-  const simulateResolve = async (outcome: 'win' | 'miss') => {
-    if (!getToken()) {
-      // Pre-auth demo path: go straight to the screen.
-      navigate(outcome === 'win' ? routes.cycleComplete : routes.missed);
-      return;
-    }
-    setSimulating(outcome);
-    try {
-      const res = await api.post<{ outcome: 'win' | 'miss'; user?: { id: string; fp: number; walletBalance: number; available: number } }>(
+  // Auto-resolve at the natural end of a cycle.
+  //
+  // Backend's /cycles/current only returns ACTIVE cycles, so we never see
+  // resolved ones here on plain login. The only auto-redirect to the Missed /
+  // CycleComplete page happens at the exact moment the cycle reaches day N
+  // and we call /resolve — based on that response.
+  const [autoResolving, setAutoResolving] = useState(false);
+  useEffect(() => {
+    if (autoResolving || !getToken()) return;
+    if (!hasActive) return;
+    if (cycle.day < cycle.daysTotal) return;
+
+    setAutoResolving(true);
+    api
+      .post<{ outcome: 'win' | 'miss'; user?: { id: string; fp: number; walletBalance: number; available: number } }>(
         '/cycles/current/resolve',
-        { simulate: outcome }
-      );
-      if (res.user) setStoredUser(res.user as never);
-      emit('user-changed');
-      emit('cycle-changed');
-      navigate(res.outcome === 'win' ? routes.cycleComplete : routes.missed);
-    } catch (err) {
-      // Common cases: no active cycle (already resolved) — just navigate to the screen.
-      if (err instanceof ApiError && err.status === 400) {
-        navigate(outcome === 'win' ? routes.cycleComplete : routes.missed);
-      }
-    } finally {
-      setSimulating(null);
-    }
-  };
+        {}
+      )
+      .then((res) => {
+        if (res.user) setStoredUser(res.user as never);
+        emit('user-changed');
+        emit('cycle-changed');
+        navigate(res.outcome === 'win' ? routes.cycleComplete : routes.missed, { replace: true });
+      })
+      .catch(() => { /* fall through; user can retry from the cycle page */ })
+      .finally(() => setAutoResolving(false));
+  }, [hasActive, cycle.day, cycle.daysTotal, autoResolving, navigate]);
 
-  const onGoalTap = async (goalId: string, done: boolean) => {
+  // Goal types that require a photo proof — must match the backend's needsPhoto list.
+  const PHOTO_GOALS = ['water', 'strength', 'sleep', 'cardio', 'diet'];
+
+  const onGoalTap = async (goalId: string, done: boolean, templateId?: string) => {
     if (done) return; // already complete — no-op
     setStepMsg(null);
     setNeedsGoogleFit(null);
     setPhotoMsg(null);
+
+    // Photo-required goals: open the file picker SYNCHRONOUSLY inside this user
+    // gesture. Doing it after a backend round-trip gets blocked by the browser
+    // (the user-activation context expires across the await).
+    if (templateId && PHOTO_GOALS.includes(templateId)) {
+      setPhotoForGoal({ id: goalId, templateId });
+      fileInputRef.current?.click();
+      return;
+    }
+
+    // Steps + anything else → go through the backend (Google Fit verification etc).
     setPendingId(goalId);
     const res = await complete(goalId);
     setPendingId(null);
@@ -83,8 +100,8 @@ export function Home() {
       } else if (res.reason === 'google_fit_required') {
         setNeedsGoogleFit(res.message ?? 'Connect Google Fit before completing a steps goal.');
       } else if (res.reason === 'photo_required') {
-        // Trigger the file picker for this goal.
-        setPhotoForGoal(goalId);
+        // Fallback for any goal the frontend list didn't catch.
+        setPhotoForGoal({ id: goalId, templateId: templateId ?? 'water' });
         fileInputRef.current?.click();
       }
       return;
@@ -97,8 +114,32 @@ export function Home() {
     const file = e.target.files?.[0];
     e.target.value = ''; // reset so the same file can be re-selected later
     if (!file || !photoForGoal) return;
-    const goalId = photoForGoal;
+    const { id: goalId, templateId } = photoForGoal;
     setPhotoForGoal(null);
+    setPhotoMsg(null);
+
+    // 1) On-device content check (COCO-SSD) BEFORE uploading. Confirms the photo
+    //    plausibly shows the activity. Fails open on model errors.
+    //    Dynamically imported so the ~300KB tfjs bundle only loads on first photo,
+    //    not on initial page load.
+    setVerifyingPhoto(true);
+    const { verifyPhotoForGoal } = await import('../lib/photoVerify');
+    const check = await verifyPhotoForGoal(file, templateId as GoalTemplate);
+    setVerifyingPhoto(false);
+    if (!check.ok) {
+      // Prefer the pose-specific hint (standing / no-person); fall back to the
+      // generic "doesn't look like X" with what was actually detected.
+      const msg = check.hint
+        ? `${check.hint}`
+        : `That photo doesn't look like ${check.wantLabel}. ` +
+          (check.detected.length ? `We saw: ${check.detected.slice(0, 3).join(', ')}. ` : '') +
+          'Take a clearer photo and try again.';
+      setPhotoMsg(msg);
+      setTimeout(() => setPhotoMsg(null), 6000);
+      return;
+    }
+
+    // 2) Upload + credit.
     setPendingId(goalId);
     const res = await completeWithPhoto(goalId, file);
     setPendingId(null);
@@ -138,7 +179,7 @@ export function Home() {
         </div>
 
         {/* No active cycle → empty state with CTA */}
-        {!hasCycle && (
+        {!hasActive && (
           <div className="rounded-[20px] bg-surface-inverse text-fg-inverse p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full bg-accent-lime grid place-items-center">
@@ -174,7 +215,7 @@ export function Home() {
         )}
 
         {/* Cycle card (dark) — tap to view your plan */}
-        {hasCycle && (
+        {hasActive && (
         <div
           role="button"
           tabIndex={0}
@@ -212,25 +253,39 @@ export function Home() {
 
         {/* Freezes + FP row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-[20px] bg-surface-secondary p-4 flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-fg-primary" strokeWidth={2.4} />
-                <Snowflake className="w-3 h-3 text-fg-primary" strokeWidth={2.4} />
-                <Snowflake className="w-3 h-3 text-fg-primary" strokeWidth={2.4} />
-                <Snowflake className="w-3 h-3 text-fg-primary/40" strokeWidth={2.4} />
+          {(() => {
+            const total = cycle.freezesStarting;
+            const used = cycle.freezesUsed;
+            const left = Math.max(0, total - used);
+            return (
+              <div className="rounded-[20px] bg-surface-secondary p-4 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-fg-primary" strokeWidth={2.4} />
+                    {Array.from({ length: total }).map((_, i) => (
+                      <Snowflake
+                        key={i}
+                        className={`w-3 h-3 ${i < left ? 'text-fg-primary' : 'text-fg-primary/40'}`}
+                        strokeWidth={2.4}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[12px] font-data font-semibold text-fg-primary">{left} left</span>
+                </div>
+                <div className="flex gap-1.5">
+                  {Array.from({ length: total }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`flex-1 h-1.5 rounded-full ${i < left ? 'bg-fg-primary' : 'bg-fg-primary/20'}`}
+                    />
+                  ))}
+                </div>
+                <div className="text-[11px] text-fg-secondary">
+                  {used > 0 ? `${used} used so far` : 'Use them on busy or sick days'}
+                </div>
               </div>
-              <span className="text-[12px] font-data font-semibold text-fg-primary">3 left</span>
-            </div>
-            <div className="flex gap-1.5">
-              <div className="flex-1 h-1.5 rounded-full bg-fg-primary" />
-              <div className="flex-1 h-1.5 rounded-full bg-fg-primary" />
-              <div className="flex-1 h-1.5 rounded-full bg-fg-primary" />
-              <div className="flex-1 h-1.5 rounded-full bg-fg-primary/20" />
-              <div className="flex-1 h-1.5 rounded-full bg-fg-primary/20" />
-            </div>
-            <div className="text-[11px] text-fg-secondary">Next earned at Day 21 streak</div>
-          </div>
+            );
+          })()}
 
           <Link to={routes.rewards} className="rounded-[20px] bg-surface-card border border-border-soft p-4 flex flex-col gap-2.5 hover:brightness-[0.98] transition">
             <div className="flex items-center justify-between">
@@ -249,41 +304,18 @@ export function Home() {
         </div>
 
         {/* Goals header */}
-        {hasCycle && (
+        {hasActive && (
         <div className="flex items-center justify-between">
           <div className="font-h font-semibold text-[17px] text-fg-primary -tracking-tight">Day {cycle.day} goals</div>
           <div className="text-[12px] text-fg-muted">{cycle.goals.filter((g) => g.done).length} of {cycle.goals.length} done</div>
         </div>
         )}
 
-        {/* Demo: simulate end-of-cycle */}
-        {hasCycle && (
-        <div className="rounded-[18px] bg-surface-card border border-dashed border-border-soft p-3 flex flex-col gap-2">
-          <div className="flex items-center gap-1.5">
-            <FastForward className="w-3 h-3 text-fg-muted" strokeWidth={2.4} />
-            <span className="text-[10px] font-semibold tracking-wider text-fg-muted">DEMO · SIMULATE DAY 30</span>
+        {/* Auto-resolution status — visible only when the cycle is being closed. */}
+        {hasActive && autoResolving && (
+          <div className="rounded-xl bg-surface-card border border-border-soft px-3.5 py-2.5 text-[12px] text-fg-muted font-medium">
+            Wrapping up your cycle…
           </div>
-          <div className="flex gap-1.5">
-            <button
-              type="button"
-              onClick={() => simulateResolve('win')}
-              disabled={!!simulating}
-              className="flex-1 rounded-full bg-accent-money/15 text-accent-money py-2 px-3 flex items-center justify-center gap-1.5 hover:brightness-95 transition disabled:opacity-60"
-            >
-              <Trophy className="w-3.5 h-3.5" strokeWidth={2.4} />
-              <span className="text-[11px] font-bold">{simulating === 'win' ? 'Resolving…' : 'Win path'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => simulateResolve('miss')}
-              disabled={!!simulating}
-              className="flex-1 rounded-full bg-warning/15 text-warning py-2 px-3 flex items-center justify-center gap-1.5 hover:brightness-95 transition disabled:opacity-60"
-            >
-              <X className="w-3.5 h-3.5" strokeWidth={2.4} />
-              <span className="text-[11px] font-bold">{simulating === 'miss' ? 'Resolving…' : 'Miss path'}</span>
-            </button>
-          </div>
-        </div>
         )}
 
         {/* Google Fit verification feedback */}
@@ -307,7 +339,15 @@ export function Home() {
           </div>
         )}
 
-        {/* Photo proof feedback (success or duplicate) */}
+        {/* On-device photo verification in progress */}
+        {verifyingPhoto && (
+          <div className="rounded-xl bg-surface-card border border-border-soft px-3.5 py-2.5 text-[12px] text-fg-secondary font-medium flex items-center gap-2">
+            <Camera className="w-3.5 h-3.5 text-accent-primary" strokeWidth={2.4} />
+            <span>Checking your photo on-device…</span>
+          </div>
+        )}
+
+        {/* Photo proof feedback (rejection or duplicate) */}
         {photoMsg && (
           <div className="rounded-xl bg-warning/10 border border-warning/30 px-3.5 py-2.5 text-[12px] text-warning font-medium flex items-center gap-2">
             <Camera className="w-3.5 h-3.5" strokeWidth={2.4} />
@@ -315,18 +355,19 @@ export function Home() {
           </div>
         )}
 
-        {/* Hidden file picker — opened programmatically when a photo-required goal is tapped. */}
+        {/* Hidden file picker — opened programmatically when a photo-required goal is tapped.
+            No `capture` attribute: on a laptop that forces a non-existent camera and the
+            click silently fails. The OS picker still offers camera + gallery on mobile. */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={onPhotoPicked}
           className="hidden"
         />
 
         {/* Goal cards — tap to mark complete */}
-        {hasCycle && (
+        {hasActive && (
         <div className="flex flex-col gap-2.5">
           {cycle.goals.map((g) => {
             const Icon = goalIconMap[g.icon] ?? Footprints;
@@ -337,7 +378,7 @@ export function Home() {
               <button
                 key={g.id}
                 type="button"
-                onClick={() => onGoalTap(g.id, isComplete)}
+                onClick={() => onGoalTap(g.id, isComplete, g.templateId)}
                 disabled={isPending || isComplete}
                 className={`text-left rounded-xl p-3.5 flex items-center gap-3.5 transition bg-surface-card border ${
                   flashed ? 'border-accent-money ring-2 ring-accent-money/30' : 'border-border-soft'
@@ -356,7 +397,11 @@ export function Home() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-h font-semibold text-[14px] text-fg-primary">{g.title}</div>
-                  <div className="text-[12px] text-fg-secondary">{g.progress}</div>
+                  <div className="text-[12px] text-fg-secondary">
+                    {isPending
+                      ? (g.templateId === 'steps' ? 'Verifying with Google Fit…' : 'Uploading proof…')
+                      : g.progress}
+                  </div>
                 </div>
                 {isComplete ? (
                   <CircleCheck className="w-[18px] h-[18px] text-accent-money" strokeWidth={2.2} />

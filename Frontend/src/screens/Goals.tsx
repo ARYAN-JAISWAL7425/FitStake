@@ -6,11 +6,19 @@ import { TabBar } from '../components/TabBar';
 import { routes } from '../lib/routes';
 import { useCycle } from '../hooks/useCycle';
 import { useCycleDays, DayStatus } from '../hooks/useCycleDays';
+import { api, ApiError } from '../lib/api';
+import { emit } from '../lib/events';
 
+// Color rules:
+//   done    → solid green (success / credited)
+//   freeze  → solid blue (distinct from done; user-burned a freeze)
+//   missed  → solid orange (visible failure marker)
+//   today   → lime with ring (current focus)
+//   upcoming → muted card (future)
 const stateStyles: Record<DayStatus, string> = {
   done: 'bg-accent-money text-fg-inverse',
-  freeze: 'bg-accent-primary/30 text-accent-primary border border-accent-primary/40',
-  missed: 'bg-warning/15 text-warning',
+  freeze: 'bg-[#D1D5DB] text-[#374151] border border-[#9CA3AF]',
+  missed: 'bg-[#F97316] text-white border border-[#C2410C]',
   today: 'bg-accent-lime text-fg-primary ring-2 ring-fg-primary',
   upcoming: 'bg-surface-card text-fg-muted border border-border-soft',
 };
@@ -37,9 +45,11 @@ const filters: GoalFilter[] = ['Active', 'Completed today', 'All'];
 
 export function Goals() {
   const cycle = useCycle();
-  const { data: daysData } = useCycleDays();
+  const { data: daysData, refetch: refetchDays } = useCycleDays();
   const [selected, setSelected] = useState<number | null>(null);
   const [filter, setFilter] = useState<GoalFilter>('Active');
+  const [freezing, setFreezing] = useState(false);
+  const [freezeError, setFreezeError] = useState<string | null>(null);
 
   const hasCycle = cycle.active !== false;
   const days = daysData?.days ?? [];
@@ -58,11 +68,28 @@ export function Goals() {
   }, [days]);
 
   const selectedDay = selected !== null && days[selected] ? days[selected] : null;
+  const canFreezeSelected = !!selectedDay && (selectedDay.status === 'upcoming' || selectedDay.status === 'missed' || selectedDay.status === 'today') && freezesLeft > 0;
+
+  const useFreezeOnDay = async () => {
+    if (!selectedDay || freezing) return;
+    setFreezing(true);
+    setFreezeError(null);
+    try {
+      await api.post('/cycles/current/freeze', { day: selectedDay.day });
+      refetchDays();
+      emit('cycle-changed');
+    } catch (err) {
+      setFreezeError(err instanceof ApiError ? err.message : 'Could not use freeze.');
+    } finally {
+      setFreezing(false);
+    }
+  };
 
   const visibleGoals = cycle.goals.filter((g) => {
     if (filter === 'All') return true;
     if (filter === 'Completed today') return g.done;
-    return true; // Active = everything in the cycle
+    // Active = still pending today (not yet completed).
+    return !g.done;
   });
 
   return (
@@ -135,27 +162,50 @@ export function Goals() {
               </div>
 
               {selectedDay && (
-                <div className="rounded-xl bg-surface-secondary p-3 flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-lg grid place-items-center text-[12px] font-data font-bold ${stateStyles[selectedDay.status]}`}>
-                    {selectedDay.day}
+                <div className="rounded-xl bg-surface-secondary p-3 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg grid place-items-center text-[12px] font-data font-bold ${stateStyles[selectedDay.status]}`}>
+                      {selectedDay.day}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-h font-semibold text-[12px] text-fg-primary">Day {selectedDay.day}</div>
+                      <div className="text-[10px] text-fg-muted">{stateLabel[selectedDay.status]}</div>
+                    </div>
+                    {canFreezeSelected && (
+                      <button
+                        type="button"
+                        onClick={useFreezeOnDay}
+                        disabled={freezing}
+                        className="rounded-full bg-accent-primary text-fg-inverse px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 hover:brightness-110 transition disabled:opacity-60"
+                      >
+                        <Snowflake className="w-3 h-3" strokeWidth={2.5} />
+                        {freezing ? 'Using…' : `Use freeze (${freezesLeft} left)`}
+                      </button>
+                    )}
+                    {selectedDay.status === 'freeze' && (
+                      <span className="rounded-full bg-accent-primary/15 text-accent-primary px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5">
+                        <Snowflake className="w-3 h-3" strokeWidth={2.5} />
+                        Freeze used
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSelected(null)}
+                      className="w-6 h-6 rounded-full grid place-items-center text-fg-muted hover:bg-surface-card transition"
+                    >
+                      <X className="w-3 h-3" strokeWidth={2.4} />
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-h font-semibold text-[12px] text-fg-primary">Day {selectedDay.day}</div>
-                    <div className="text-[10px] text-fg-muted">{stateLabel[selectedDay.status]}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setSelected(null)}
-                    className="w-6 h-6 rounded-full grid place-items-center text-fg-muted hover:bg-surface-card transition"
-                  >
-                    <X className="w-3 h-3" strokeWidth={2.4} />
-                  </button>
+                  {freezeError && (
+                    <div className="text-[11px] text-warning font-medium">{freezeError}</div>
+                  )}
                 </div>
               )}
 
               <div className="flex flex-wrap gap-3 text-[10px] text-fg-muted pt-1">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent-money inline-block" /> Done</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-warning/30 inline-block" /> Missed</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#D1D5DB] border border-[#9CA3AF] inline-block" /> Freeze</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#F97316] inline-block" /> Missed</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent-lime inline-block" /> Today</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-surface-secondary border border-border-soft inline-block" /> Upcoming</span>
               </div>

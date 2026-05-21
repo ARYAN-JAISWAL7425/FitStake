@@ -15,6 +15,11 @@ export type AuthUser = {
   fpEarnedToday?: number;
   fpToNextTier?: number;
   nextTier?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+  lifetime?: {
+    earnedBack: number;
+    cyclesDone: number;
+    donatedToCharity: number;
+  };
 };
 
 export function getToken(): string | null {

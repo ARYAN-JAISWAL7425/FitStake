@@ -32,14 +32,15 @@ export type Goal = {
   id: string;
   title: string;
   icon: string;
+  templateId: 'steps' | 'strength' | 'water' | 'sleep' | 'diet' | 'cardio';
   progress: string;
   done?: boolean;
 };
 
 export const mockGoals: Goal[] = [
-  { id: 'steps', title: 'Walk 10,000 steps', icon: 'footprints', progress: '6,420 / 10,000' },
-  { id: 'strength', title: 'Strength training 30m', icon: 'dumbbell', progress: 'Completed at 7:42 AM', done: true },
-  { id: 'water', title: 'Drink 2L water', icon: 'droplet', progress: '1.4L / 2L' },
+  { id: 'steps', templateId: 'steps', title: 'Walk 10,000 steps', icon: 'footprints', progress: '6,420 / 10,000' },
+  { id: 'strength', templateId: 'strength', title: 'Strength training 30m', icon: 'dumbbell', progress: 'Completed at 7:42 AM', done: true },
+  { id: 'water', templateId: 'water', title: 'Drink 2L water', icon: 'droplet', progress: '1.4L / 2L' },
 ];
 
 export type Coupon = {
@@ -81,6 +82,7 @@ export const mockStoreItems: StoreItem[] = [
   { id: 'cultfit-pro', title: 'Cult.fit Pro · 1 month', subtitle: 'Unlimited classes · digital delivery', icon: 'activity', cost: 3500, category: 'Subscription', cyclesToUnlock: 1 },
   { id: 'gym-pass', title: 'Gym day pass', subtitle: 'Any partner gym in your city', icon: 'dumbbell', cost: 2800, category: 'Experience', cyclesToUnlock: 1 },
   { id: 'smartwatch', title: 'Fitness tracker', subtitle: 'Heart rate · sleep · steps', icon: 'watch', cost: 12000, category: 'Gear', cyclesToUnlock: 6, locked: true, unlockTier: 'Gold' },
+  { id: 'bicycle', title: 'City bicycle', subtitle: 'Single-speed commuter cycle · home delivered', icon: 'bike', cost: 30000, category: 'Gear', cyclesToUnlock: 6, locked: true, unlockTier: 'Gold' },
 ];
 
 export type Transaction = {

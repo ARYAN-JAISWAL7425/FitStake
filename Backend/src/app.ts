@@ -13,6 +13,7 @@ import paymentsRoutes from './routes/payments';
 import rewardsRoutes from './routes/rewards';
 import squadsRoutes from './routes/squads';
 import integrationsRoutes from './routes/integrations';
+import supportRoutes from './routes/support';
 
 export function buildApp() {
   const app = express();
@@ -40,6 +41,7 @@ export function buildApp() {
   app.use('/rewards', rewardsRoutes);
   app.use('/squads', squadsRoutes);
   app.use('/integrations', integrationsRoutes);
+  app.use('/support', supportRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

@@ -8,6 +8,8 @@ import { useHealthIntegration } from '../hooks/useHealthIntegration';
 import { mockTierBenefits } from '../data/mock';
 import { routes } from '../lib/routes';
 import { clearAuth } from '../lib/auth';
+import { getSelectedCharity } from '../lib/charity';
+import { useSquad } from '../hooks/useSquad';
 
 type MenuItem = {
   label: string;
@@ -17,23 +19,31 @@ type MenuItem = {
   action?: 'signOut';
 };
 
-const menu: MenuItem[] = [
-  { label: 'Privacy & data', icon: ShieldCheck, sub: 'DPDP rights · export · delete', to: routes.profile },
-  { label: 'Charity preferences', icon: HeartHandshake, sub: 'GiveIndia (selected)', to: routes.profile },
-  { label: 'My squad', icon: Users, sub: '4 members · Morning Warriors', to: routes.group },
-  { label: 'Transactions', icon: Receipt, sub: '12 cycles · ₹24,000 total', to: routes.wallet },
-  { label: 'Support', icon: LifeBuoy, sub: 'Help center · contact us', to: routes.profile },
-  { label: 'Sign out', icon: LogOut, sub: '', action: 'signOut' },
-];
-
 export function Profile() {
   const user = useUser();
   const perks = mockTierBenefits[user.tier];
   const navigate = useNavigate();
   const { status: healthStatus, connect, disconnect, syncSteps } = useHealthIntegration();
+  const { primary: squad } = useSquad();
+  const charity = getSelectedCharity();
+
+  const menu: MenuItem[] = [
+    { label: 'Privacy & data', icon: ShieldCheck, sub: 'DPDP rights · export · delete', to: routes.privacy },
+    { label: 'Charity preferences', icon: HeartHandshake, sub: `${charity.name} (selected)`, to: routes.charity },
+    {
+      label: 'My squad',
+      icon: Users,
+      sub: squad ? `${squad.members.length} member${squad.members.length === 1 ? '' : 's'} · ${squad.name}` : 'No squad yet — tap to create or join',
+      to: routes.group,
+    },
+    { label: 'Transactions', icon: Receipt, sub: `${user.lifetime?.cyclesDone ?? 0} cycle${user.lifetime?.cyclesDone === 1 ? '' : 's'} · ₹${((user.lifetime?.earnedBack ?? 0) + (user.lifetime?.donatedToCharity ?? 0)).toLocaleString('en-IN')} moved`, to: routes.wallet },
+    { label: 'Support', icon: LifeBuoy, sub: 'Help center · contact us', to: routes.support },
+    { label: 'Sign out', icon: LogOut, sub: '', action: 'signOut' },
+  ];
   const [searchParams, setSearchParams] = useSearchParams();
   const [banner, setBanner] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [stepsToday, setStepsToday] = useState<number | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
   const [syncing, setSyncing] = useState(false);
 
   // Handle the redirect back from Google's consent screen.
@@ -59,6 +69,7 @@ export function Profile() {
     try {
       const res = await syncSteps();
       setStepsToday(res.steps);
+      setLastSyncAt(new Date());
     } catch (err) {
       setBanner({ kind: 'err', text: err instanceof Error ? err.message : 'Sync failed' });
     } finally {
@@ -87,16 +98,18 @@ export function Profile() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-h font-bold text-[18px]">{user.name}</div>
-            <div className="text-[12px] text-white/70 mt-0.5">{user.tier} tier · 4 cycles completed</div>
+            <div className="text-[12px] text-white/70 mt-0.5">
+              {user.tier} tier · {user.lifetime?.cyclesDone ?? 0} cycle{user.lifetime?.cyclesDone === 1 ? '' : 's'} completed
+            </div>
           </div>
         </div>
 
-        {/* Lifetime stats */}
+        {/* Lifetime stats — pulled live from /me's `lifetime` block. */}
         <div className="grid grid-cols-3 gap-2.5">
           {[
-            { value: '₹8,000', label: 'Earned back' },
-            { value: '4', label: 'Cycles done' },
-            { value: '₹1,200', label: 'To charity' },
+            { value: `₹${(user.lifetime?.earnedBack ?? 0).toLocaleString('en-IN')}`, label: 'Earned back' },
+            { value: String(user.lifetime?.cyclesDone ?? 0), label: 'Cycles done' },
+            { value: `₹${(user.lifetime?.donatedToCharity ?? 0).toLocaleString('en-IN')}`, label: 'To charity' },
           ].map((s) => (
             <div key={s.label} className="rounded-xl bg-surface-card border border-border-soft p-3 flex flex-col gap-0.5">
               <span className="font-data font-bold text-[16px] text-fg-primary">{s.value}</span>
@@ -120,17 +133,6 @@ export function Profile() {
                 {p}
               </span>
             ))}
-          </div>
-        </div>
-
-        {/* Cohort percentile (anonymous) */}
-        <div className="rounded-[20px] bg-surface-card border border-border-soft p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent-money/15 grid place-items-center">
-            <span className="font-data font-bold text-[14px] text-accent-money">23%</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-h font-semibold text-[13px] text-fg-primary">Top 23% of Silver users this cycle</div>
-            <div className="text-[11px] text-fg-muted">Anonymous · resets weekly</div>
           </div>
         </div>
 
@@ -169,9 +171,16 @@ export function Profile() {
             </div>
 
             {stepsToday !== null && (
-              <div className="rounded-xl bg-surface-secondary px-3 py-2 flex items-center justify-between text-[12px]">
-                <span className="text-fg-secondary">Steps today</span>
-                <span className="font-data font-bold text-fg-primary">{stepsToday.toLocaleString('en-IN')}</span>
+              <div className="rounded-xl bg-surface-secondary px-3 py-2 flex flex-col gap-0.5">
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="text-fg-secondary">Steps today</span>
+                  <span className="font-data font-bold text-fg-primary">{stepsToday.toLocaleString('en-IN')}</span>
+                </div>
+                {lastSyncAt && (
+                  <div className="text-[10px] text-fg-muted">
+                    Synced at {lastSyncAt.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', second: '2-digit' })} · Google updates with a 1–5 min lag
+                  </div>
+                )}
               </div>
             )}
 

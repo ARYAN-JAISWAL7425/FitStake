@@ -12,7 +12,6 @@ import { FpEvent } from '../models/FpEvent';
 import { User, toUserDTO } from '../models/User';
 import { findIntegration, getStepsForToday, getValidAccessToken } from '../lib/googleFit';
 import { tierForFp } from '../lib/tier';
-import { applyFreezeAutoBurn } from '../lib/freeze';
 
 const router = Router();
 const DAY_COMPLETE_BONUS = 20;
@@ -113,7 +112,6 @@ router.post('/', requireAuth, async (req, res, next) => {
 
     const cycle = await Cycle.findOne({ userId, status: 'active' });
     if (!cycle) throw new HttpError(400, 'No active cycle');
-    await applyFreezeAutoBurn(cycle);
 
     const goal = cycle.goals.find((g) => g._id?.toString() === goalId);
     if (!goal) throw new HttpError(404, 'Goal not found in active cycle');
@@ -121,7 +119,9 @@ router.post('/', requireAuth, async (req, res, next) => {
     const day = currentDayOf(cycle);
 
     // Photo-required goal types — must use the /photo endpoint instead.
-    const needsPhoto: typeof goal.templateId[] = ['water', 'strength', 'cardio', 'diet'];
+    // Sleep is also photo-gated (e.g. a screenshot of your wearable's sleep
+    // graph). The only auto-verified goal is 'steps' via Google Fit.
+    const needsPhoto: typeof goal.templateId[] = ['water', 'strength', 'cardio', 'diet', 'sleep'];
     if (needsPhoto.includes(goal.templateId)) {
       return res.status(409).json({
         ok: false,
@@ -184,7 +184,6 @@ router.post('/photo', requireAuth, upload.single('photo'), async (req: Request, 
 
     const cycle = await Cycle.findOne({ userId, status: 'active' });
     if (!cycle) throw new HttpError(400, 'No active cycle');
-    await applyFreezeAutoBurn(cycle);
 
     const goal = cycle.goals.find((g) => g._id?.toString() === goalId);
     if (!goal) throw new HttpError(404, 'Goal not found in active cycle');

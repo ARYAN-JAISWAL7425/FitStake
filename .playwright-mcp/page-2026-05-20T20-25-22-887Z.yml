@@ -1,0 +1,27 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - link [ref=e17] [cursor=pointer]:
+        - /url: /login
+        - img [ref=e18]
+      - heading "Reset password" [level=1] [ref=e20]
+      - paragraph [ref=e21]: Enter the email you signed up with. We'll send you a link to set a new password.
+      - generic [ref=e22]: EMAIL
+      - generic [ref=e23]:
+        - img [ref=e24]
+        - textbox "you@example.com" [active] [ref=e27]
+      - button "Send reset link" [disabled]:
+        - generic: Send reset link
+        - img
+      - generic [ref=e28]:
+        - text: Don't have an account?
+        - link "Sign up" [ref=e29] [cursor=pointer]:
+          - /url: /register
+  - button "Open demo navigator" [ref=e30] [cursor=pointer]:
+    - img [ref=e31]

@@ -1,0 +1,58 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - link [ref=e18] [cursor=pointer]:
+          - /url: /goal-setup
+          - img [ref=e19]
+        - heading "Set your stake" [level=1] [ref=e21]
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e29]: LOCK FOR 30 DAYS
+          - generic [ref=e30]: Standard commitment
+        - generic [ref=e31]:
+          - generic [ref=e32]: ₹
+          - generic [ref=e33]: 2,000
+        - generic [ref=e34]:
+          - slider [ref=e35] [cursor=pointer]: "2000"
+          - generic [ref=e36]:
+            - generic [ref=e37]: ₹100
+            - generic [ref=e38]: ₹10,000
+        - generic [ref=e39]:
+          - button "₹500" [ref=e40] [cursor=pointer]
+          - button "₹2k" [ref=e41] [cursor=pointer]
+          - button "₹5k" [ref=e42] [cursor=pointer]
+          - button "₹10k" [ref=e43] [cursor=pointer]
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - img [ref=e47]
+          - generic [ref=e49]:
+            - generic [ref=e50]: Complete 25 / 30 days
+            - generic [ref=e51]: ₹2,000 returns to your wallet · cycle bonus FP
+        - generic [ref=e52]:
+          - img [ref=e54]
+          - generic [ref=e59]:
+            - generic [ref=e60]: Miss the threshold
+            - generic [ref=e61]: ₹2,000 → GiveIndia in your name · 80G receipt
+      - generic [ref=e62]:
+        - img [ref=e64]
+        - generic [ref=e69]:
+          - generic [ref=e70]: 3 freezes this cycle
+          - generic [ref=e71]: Standard stake (₹1k–₹4,999) → 3 freezes
+      - generic [ref=e72]:
+        - button "Review plan with ₹2,000 stake" [ref=e73] [cursor=pointer]:
+          - img [ref=e74]
+          - generic [ref=e77]: Review plan with ₹2,000 stake
+        - generic [ref=e78]:
+          - img [ref=e79]
+          - generic [ref=e81]: FitStake takes nothing either way. Win or lose, the platform earns ₹0.
+  - button "Open demo navigator" [ref=e82] [cursor=pointer]:
+    - img [ref=e83]

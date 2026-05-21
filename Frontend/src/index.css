@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply font-body bg-neutral-100 text-fg-primary antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Numeric values use Geist Mono via class .font-data */
+  .font-data {
+    font-feature-settings: 'tnum', 'zero';
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

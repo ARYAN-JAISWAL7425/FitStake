@@ -1,0 +1,84 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - heading "Wallet" [level=1] [ref=e18]
+        - link [ref=e19] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e20]
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - img [ref=e25]
+            - generic [ref=e28]: TOTAL BALANCE
+          - button [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+        - generic [ref=e33]:
+          - generic [ref=e34]: ₹
+          - generic [ref=e35]: 2,450
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - generic [ref=e38]: Locked (cycle)
+            - generic [ref=e39]: ₹0
+          - generic [ref=e40]:
+            - generic [ref=e41]: Available
+            - generic [ref=e42]: ₹450
+      - generic [ref=e43]:
+        - button "Deposit" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e47]: Deposit
+        - button "Withdraw" [ref=e48] [cursor=pointer]:
+          - img [ref=e49]
+          - generic [ref=e51]: Withdraw
+        - link "Start cycle" [ref=e52] [cursor=pointer]:
+          - /url: /plan-review
+          - img [ref=e53]
+          - generic [ref=e55]: Start cycle
+      - generic [ref=e56]:
+        - heading "Recent activity" [level=2] [ref=e57]
+        - link "See all" [ref=e58] [cursor=pointer]:
+          - /url: /profile
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - img [ref=e62]
+          - generic [ref=e65]:
+            - generic [ref=e66]: Cycle complete · stake returned
+            - generic [ref=e67]: May 18 · 28 / 30 credited
+          - generic [ref=e68]: + ₹2,000
+        - generic [ref=e69]:
+          - img [ref=e71]
+          - generic [ref=e74]:
+            - generic [ref=e75]: Cycle missed · 18/30
+            - generic [ref=e76]: ₹2,000 → GiveIndia · Apr 28
+          - generic [ref=e77]: − ₹2,000
+        - generic [ref=e78]:
+          - img [ref=e80]
+          - generic [ref=e83]:
+            - generic [ref=e84]: Cycle complete · stake returned
+            - generic [ref=e85]: Mar 30 · 26 / 30 credited
+          - generic [ref=e86]: + ₹2,000
+    - generic [ref=e87]:
+      - link "Home" [ref=e88] [cursor=pointer]:
+        - /url: /home
+        - img [ref=e89]
+        - generic [ref=e92]: Home
+      - link "Goals" [ref=e93] [cursor=pointer]:
+        - /url: /goals
+        - img [ref=e94]
+        - generic [ref=e97]: Goals
+      - link "Rewards" [ref=e98] [cursor=pointer]:
+        - /url: /rewards
+        - img [ref=e99]
+        - generic [ref=e103]: Rewards
+      - link "Profile" [ref=e104] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e105]
+        - generic [ref=e108]: Profile
+  - button "Open demo navigator" [ref=e109] [cursor=pointer]:
+    - img [ref=e110]

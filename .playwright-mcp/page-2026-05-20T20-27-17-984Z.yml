@@ -1,0 +1,58 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - link [ref=e18] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e19]
+        - generic [ref=e21]: Cycle 04
+        - link [ref=e22] [cursor=pointer]:
+          - /url: /wallet
+          - img [ref=e23]
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e32]:
+            - generic [ref=e33]: "18"
+            - generic [ref=e34]: of 30 days
+        - heading "You didn't unlock the stake" [level=1] [ref=e35]
+        - paragraph [ref=e36]: Needed 25 days credited — you came up 7 short. Streak resets, but you still earned FP for showing up.
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: Where your stake went
+          - generic [ref=e40]: Full → charity
+        - generic [ref=e41]:
+          - generic [ref=e42]: Stake amount
+          - generic [ref=e43]: ₹2,000
+        - generic [ref=e45]:
+          - img [ref=e47]
+          - generic [ref=e52]:
+            - generic [ref=e53]: To GiveIndia in your name
+            - generic [ref=e54]: 100% of stake • 80G tax receipt issued
+          - generic [ref=e55]: ₹2,000
+      - generic [ref=e56]:
+        - img [ref=e58]
+        - generic [ref=e60]:
+          - generic [ref=e61]: + 270 FP for showing up
+          - generic [ref=e62]: 18 credited days × 15 FP — keep them, spend in Rewards.
+      - generic [ref=e63]:
+        - generic [ref=e65]: What got in the way?
+        - generic [ref=e66]:
+          - button "Too busy" [ref=e67] [cursor=pointer]
+          - button "Stress" [ref=e68] [cursor=pointer]
+          - button "Travel" [ref=e69] [cursor=pointer]
+          - button "Felt sick" [ref=e70] [cursor=pointer]
+          - button "Lost motivation" [ref=e71] [cursor=pointer]
+          - button "Other" [ref=e72] [cursor=pointer]
+      - link "Start a new cycle" [ref=e74] [cursor=pointer]:
+        - /url: /goal-setup
+        - img [ref=e75]
+        - generic [ref=e80]: Start a new cycle
+  - button "Open demo navigator" [ref=e81] [cursor=pointer]:
+    - img [ref=e82]

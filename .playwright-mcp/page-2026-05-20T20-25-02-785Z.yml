@@ -1,0 +1,35 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - img [ref=e19]
+        - generic [ref=e25]: FitStake
+      - heading "Welcome back" [level=1] [ref=e26]
+      - paragraph [ref=e27]: Sign in to continue your cycle.
+      - generic [ref=e28]: EMAIL
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - textbox "you@example.com" [ref=e33]
+      - generic [ref=e34]: PASSWORD
+      - generic [ref=e35]:
+        - img [ref=e36]
+        - textbox "At least 6 characters" [ref=e39]
+        - button [ref=e40] [cursor=pointer]:
+          - img [ref=e41]
+      - link "Forgot password?" [ref=e45] [cursor=pointer]:
+        - /url: /forgot-password
+      - button "Sign in" [disabled]:
+        - generic: Sign in
+        - img
+      - generic [ref=e46]:
+        - text: New here?
+        - link "Create an account" [ref=e47] [cursor=pointer]:
+          - /url: /register
+  - button "Open demo navigator" [ref=e48] [cursor=pointer]:
+    - img [ref=e49]

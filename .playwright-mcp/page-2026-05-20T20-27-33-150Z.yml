@@ -1,0 +1,89 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - link [ref=e18] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e19]
+        - heading "Squad" [level=1] [ref=e21]
+        - button [ref=e22] [cursor=pointer]:
+          - img [ref=e23]
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - img [ref=e32]
+            - generic [ref=e37]: MORNING WARRIORS
+          - generic [ref=e38]: Cycle 04 · Day 14
+        - heading "Your squad shows up" [level=2] [ref=e39]:
+          - text: Your squad
+          - text: shows up
+        - generic [ref=e40]:
+          - generic [ref=e41]: S
+          - generic [ref=e42]: A
+          - generic [ref=e43]: R
+          - generic [ref=e44]: M
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: 85%
+            - generic [ref=e48]: Squad avg
+          - generic [ref=e49]:
+            - generic [ref=e50]: 13 days
+            - generic [ref=e51]: Top streak
+          - generic [ref=e52]:
+            - generic [ref=e53]: "4"
+            - generic [ref=e54]: Members
+      - heading "Squad leaderboard" [level=2] [ref=e55]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]: "#1"
+          - generic [ref=e59]: S
+          - generic [ref=e61]: Sneha
+          - generic [ref=e64]:
+            - generic [ref=e65]: 93%
+            - generic [ref=e66]:
+              - img [ref=e67]
+              - generic [ref=e70]: ↑ 1
+        - generic [ref=e71]:
+          - generic [ref=e72]: "#2"
+          - generic [ref=e73]: A
+          - generic [ref=e75]: You
+          - generic [ref=e78]:
+            - generic [ref=e79]: 79%
+            - generic [ref=e80]:
+              - img [ref=e81]
+              - generic [ref=e82]: =
+        - generic [ref=e83]:
+          - generic [ref=e84]: "#3"
+          - generic [ref=e85]: R
+          - generic [ref=e87]: Ravi
+          - generic [ref=e90]:
+            - generic [ref=e91]: 79%
+            - generic [ref=e92]:
+              - img [ref=e93]
+              - generic [ref=e96]: ↓ 1
+        - generic [ref=e97]:
+          - generic [ref=e98]: "#4"
+          - generic [ref=e99]: M
+          - generic [ref=e101]: Mohit
+          - generic [ref=e104]:
+            - generic [ref=e105]: 64%
+            - generic [ref=e106]:
+              - img [ref=e107]
+              - generic [ref=e110]: ↓ 2
+      - generic [ref=e111]:
+        - img [ref=e113]
+        - generic [ref=e115]:
+          - generic [ref=e116]: Send Mohit some encouragement?
+          - generic [ref=e117]: He's at 64% — a nudge from a teammate can flip a cycle. Pure motivation, not pressure.
+        - button "Send nudge" [ref=e118] [cursor=pointer]
+      - button "Invite a teammate" [ref=e119] [cursor=pointer]:
+        - img [ref=e120]
+        - generic [ref=e123]: Invite a teammate
+  - button "Open demo navigator" [ref=e124] [cursor=pointer]:
+    - img [ref=e125]

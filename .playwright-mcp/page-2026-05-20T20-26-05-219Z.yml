@@ -1,0 +1,109 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 9:41
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - img [ref=e10]
+        - img [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Good morning,
+          - generic [ref=e20]: Aryan
+        - generic [ref=e21]:
+          - link [ref=e22] [cursor=pointer]:
+            - /url: /group
+            - img [ref=e23]
+          - link "A" [ref=e26] [cursor=pointer]:
+            - /url: /profile
+      - link "Day 14 of 30 ₹2,000 LOCKED 13 of 25 credited 16 days left • Ends Jun 5 12 more credited days to unlock" [ref=e27] [cursor=pointer]:
+        - /url: /plan-review
+        - generic [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e32]:
+            - generic [ref=e33]: Day 14
+            - generic [ref=e34]: of 30
+        - generic [ref=e35]:
+          - link "₹2,000 LOCKED" [ref=e36]:
+            - /url: /wallet
+            - img [ref=e37]
+            - generic [ref=e40]: ₹2,000 LOCKED
+          - generic [ref=e41]: 13 of 25 credited
+          - generic [ref=e42]: 16 days left • Ends Jun 5
+          - generic [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e48]: 12 more credited days to unlock
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - img [ref=e53]
+              - img [ref=e55]
+              - img [ref=e60]
+              - img [ref=e65]
+            - generic [ref=e70]: 3 left
+          - generic [ref=e77]: Next earned at Day 21 streak
+        - link "FITNESS POINTS 2,840 FP + 90 FP earned today" [ref=e78] [cursor=pointer]:
+          - /url: /rewards
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - img [ref=e81]
+              - generic [ref=e83]: FITNESS POINTS
+            - img [ref=e84]
+          - generic [ref=e86]:
+            - generic [ref=e87]: 2,840
+            - generic [ref=e88]: FP
+          - generic [ref=e89]: + 90 FP earned today
+      - generic [ref=e90]:
+        - generic [ref=e91]: Day 14 goals
+        - generic [ref=e92]: 3 of 5 done
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - img [ref=e95]
+          - generic [ref=e98]: DEMO · SIMULATE DAY 30
+        - generic [ref=e99]:
+          - button "Win path" [ref=e100] [cursor=pointer]:
+            - img [ref=e101]
+            - generic [ref=e107]: Win path
+          - button "Miss path" [ref=e108] [cursor=pointer]:
+            - img [ref=e109]
+            - generic [ref=e112]: Miss path
+      - generic [ref=e113]:
+        - button "Walk 10,000 steps 6,420 / 10,000" [ref=e114] [cursor=pointer]:
+          - img [ref=e116]
+          - generic [ref=e119]:
+            - generic [ref=e120]: Walk 10,000 steps
+            - generic [ref=e121]: 6,420 / 10,000
+          - img [ref=e122]
+        - button "Strength training 30m Completed at 7:42 AM" [disabled] [ref=e124]:
+          - img [ref=e126]
+          - generic [ref=e129]:
+            - generic [ref=e130]: Strength training 30m
+            - generic [ref=e131]: Completed at 7:42 AM
+          - img [ref=e132]
+        - button "Drink 2L water 1.4L / 2L" [ref=e135] [cursor=pointer]:
+          - img [ref=e137]
+          - generic [ref=e139]:
+            - generic [ref=e140]: Drink 2L water
+            - generic [ref=e141]: 1.4L / 2L
+          - img [ref=e142]
+    - generic [ref=e144]:
+      - link "Home" [ref=e145] [cursor=pointer]:
+        - /url: /home
+        - img [ref=e146]
+        - generic [ref=e149]: Home
+      - link "Goals" [ref=e150] [cursor=pointer]:
+        - /url: /goals
+        - img [ref=e151]
+        - generic [ref=e154]: Goals
+      - link "Rewards" [ref=e155] [cursor=pointer]:
+        - /url: /rewards
+        - img [ref=e156]
+        - generic [ref=e160]: Rewards
+      - link "Profile" [ref=e161] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e162]
+        - generic [ref=e165]: Profile
+  - button "Open demo navigator" [ref=e166] [cursor=pointer]:
+    - img [ref=e167]

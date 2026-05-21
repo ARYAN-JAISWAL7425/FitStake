@@ -8,7 +8,6 @@ import { useUser } from '../hooks/useUser';
 import { useCycle } from '../hooks/useCycle';
 import { useCompletion } from '../hooks/useCompletion';
 import { routes } from '../lib/routes';
-import { getStake } from '../lib/stake';
 import { api } from '../lib/api';
 import { getToken, setStoredUser } from '../lib/auth';
 import { emit } from '../lib/events';
@@ -26,7 +25,6 @@ const goalIconMap: Record<string, typeof Footprints> = {
 export function Home() {
   const user = useUser();
   const cycle = useCycle();
-  const stake = getStake();
   const navigate = useNavigate();
   const { complete, completeWithPhoto, submitting } = useCompletion();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -239,7 +237,7 @@ export function Home() {
               className="inline-flex items-center gap-1.5 self-start rounded-full bg-white/10 px-2.5 py-1 hover:bg-white/15"
             >
               <Lock className="w-3 h-3 text-accent-lime" strokeWidth={2.5} />
-              <span className="text-[10px] font-semibold tracking-wider text-accent-lime">₹{stake.toLocaleString('en-IN')} LOCKED</span>
+              <span className="text-[10px] font-semibold tracking-wider text-accent-lime">₹{cycle.stake.toLocaleString('en-IN')} LOCKED</span>
             </Link>
             <div className="font-h font-bold text-[18px] -tracking-tight">{cycle.credited} of {cycle.threshold} credited</div>
             <div className="text-[11px] text-white/70">{cycle.daysLeft} days left • Ends {cycle.endDate}</div>

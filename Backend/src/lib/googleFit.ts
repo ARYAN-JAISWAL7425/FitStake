@@ -1,6 +1,7 @@
 // Thin wrapper over Google Fit REST APIs. Uses the global `fetch` (Node 18+).
 
 import { env } from './env';
+import { localStartOfDayMs, DAY_MS } from './time';
 import { HealthIntegration, HealthIntegrationDoc } from '../models/HealthIntegration';
 
 export const GOOGLE_FIT_SCOPES = ['https://www.googleapis.com/auth/fitness.activity.read'].join(' ');
@@ -151,9 +152,11 @@ async function aggregateAcrossAllSources(accessToken: string, startMs: number, e
  *      device-level streams are empty).
  */
 export async function getStepsForToday(accessToken: string): Promise<number> {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+  // IST calendar day (UTC+5:30) — matches what the user's Fit app shows and the
+  // cycle's own day boundary. Using server-local midnight would be UTC on Render
+  // and return the *previous* IST day's steps after IST midnight.
+  const startOfDay = localStartOfDayMs();
+  const endOfDay = startOfDay + DAY_MS - 1;
   const startNs = startOfDay * 1_000_000;
   const endNs = endOfDay * 1_000_000;
 

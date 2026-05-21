@@ -1,4 +1,5 @@
 import { Schema, model, InferSchemaType, HydratedDocument, Types } from 'mongoose';
+import { localDayIndex } from '../lib/time';
 
 export const TEMPLATE_IDS = ['steps', 'strength', 'water', 'sleep', 'diet', 'cardio'] as const;
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
@@ -76,9 +77,13 @@ export type CycleDoc = HydratedDocument<InferSchemaType<typeof cycleSchema>>;
 
 const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** Day number (1-indexed) within the cycle, clamped to [1, daysTotal]. */
+/**
+ * Day number (1-indexed) within the cycle, clamped to [1, daysTotal].
+ * Counts whole IST calendar days since the cycle started, so the day advances
+ * (and the day's goals reset) at IST midnight — not 24h after the start moment.
+ */
 export function currentDayOf(c: CycleDoc, now: Date = new Date()): number {
-  const elapsed = Math.floor((now.getTime() - c.startedAt.getTime()) / (1000 * 60 * 60 * 24));
+  const elapsed = localDayIndex(now) - localDayIndex(c.startedAt);
   return Math.max(1, Math.min(c.daysTotal, elapsed + 1));
 }
 

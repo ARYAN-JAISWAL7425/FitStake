@@ -22,6 +22,15 @@ const goalIconMap: Record<string, typeof Footprints> = {
   bike: Bike,
 };
 
+/** Time-of-day greeting based on the user's device clock. */
+function greetingLabel(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  if (h < 21) return 'Good evening';
+  return 'Good night';
+}
+
 export function Home() {
   const user = useUser();
   const cycle = useCycle();
@@ -163,7 +172,7 @@ export function Home() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[13px] text-fg-muted">Good morning,</div>
+            <div className="text-[13px] text-fg-muted">{greetingLabel()},</div>
             <div className="font-h font-bold text-[22px] tracking-tight text-fg-primary">{user.name}</div>
           </div>
           <div className="flex items-center gap-2.5">
